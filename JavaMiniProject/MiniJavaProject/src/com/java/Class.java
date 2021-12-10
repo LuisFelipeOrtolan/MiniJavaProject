@@ -2,20 +2,27 @@ package com.java;
 
 import java.util.List;
 import java.util.Scanner;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
 import java.util.Date;
 
 import com.java.starhotel.dao.MenuItemDaoCollectionImpl;
+import com.java.starhotel.dao.MenuItemDaoSqlImpl;
 import com.java.starhotel.model.MenuItem;
 import com.java.starhotel.util.DateUtil;
 import com.java.starhotel.dao.CartDaoCollectionImpl;
+import com.java.starhotel.dao.CartDaoSqlImpl;
 import com.java.starhotel.dao.CartEmptyException;
 
 public class Class {
 
     private static Scanner s = new Scanner(System.in);
     private static MenuItemDaoCollectionImpl menuDao = new MenuItemDaoCollectionImpl();
+    private static MenuItemDaoSqlImpl menuDaoSql = new MenuItemDaoSqlImpl();
     private static CartDaoCollectionImpl cartDao = new CartDaoCollectionImpl();
-    private static Long currentId = Long.valueOf(menuDao.getMenuItemList().size());
+    private static CartDaoSqlImpl cartDaoSql = new CartDaoSqlImpl();
+    private static Long currentId = Long.valueOf(menuDao.getMenuItemList().size()) + 1;
 
     public static void main(String args[]) throws CartEmptyException{
         String nextLine;
@@ -43,6 +50,24 @@ public class Class {
             
             nextLine = s.nextLine();
         }
+
+        String url = "jdbc:mysql://localhost:3306/starhotel";
+        String username = "root";
+        String password = "root";
+
+        try {
+            Connection connection = DriverManager.getConnection(url, username, password);
+            String query = "delete from Carts;";
+            Statement statement = connection.createStatement();
+            statement.executeUpdate(query);
+            query = "delete from MenuItem;";
+            statement = connection.createStatement();
+            statement.executeUpdate(query);
+            statement.close();
+            connection.close();
+        } catch (Exception e) {
+
+        }
     }
 
     public static boolean displayMenuAdmin() throws CartEmptyException {
@@ -67,7 +92,12 @@ public class Class {
         }
         switch(option) {
             case 1:
+                System.out.println("Collection: ");
                 List<MenuItem> menuList = menuDao.getMenuItemListAdmin();
+                for(MenuItem item : menuList)
+                    System.out.println(item);
+                System.out.println("SQL: ");
+                menuList = menuDaoSql.getMenuItemListAdmin();
                 for(MenuItem item : menuList)
                     System.out.println(item);
                 break;
@@ -110,6 +140,7 @@ public class Class {
                     System.out.println("free delivery. Now, it has free delivery, true or false?");
                     item.setFreeDelivery(Boolean.parseBoolean(s.nextLine()));
                     menuDao.modifyMenuItem(item);
+                    menuDaoSql.modifyMenuItem(item);
                 }
                 break;
             case 3:
@@ -134,6 +165,7 @@ public class Class {
                 Boolean freeDelivery = Boolean.parseBoolean(s.nextLine());
                 MenuItem newItem = new MenuItem(currentId++, name, price, active, dateOfLunch, category, freeDelivery);
                 menuDao.addMenuItem(newItem);
+                menuDaoSql.addMenuItem(newItem);
                 break;
             case 4:
                 System.out.println("What is the Id of the item?");
@@ -155,6 +187,7 @@ public class Class {
                     }
                 }
                 cartDao.addCartItem(userId, itemId);
+                cartDaoSql.addCartItem(userId, itemId);
                 break;
             case 5:
                 System.out.println("What is the id of the customer?");
@@ -166,10 +199,18 @@ public class Class {
                         System.out.println("Please, digit a long number.");
                     }
                 }
+                System.out.println("Collection: ");
                 List<MenuItem> itemsFromCustomer = cartDao.getAllCartItems(idC);
                 for(MenuItem it : itemsFromCustomer)
                     System.out.println(it);
                 System.out.println("Total: " + String.format("%.2f", cartDao.getCart(idC).getTotal()));
+
+                System.out.println("SQL: ");
+                itemsFromCustomer = cartDaoSql.getAllCartItems(idC);
+                for(MenuItem it : itemsFromCustomer)
+                    System.out.println(it);
+                System.out.println("Total: " + String.format("%.2f",cartDaoSql.getTotal(idC)));
+
                 break;
             case 6:
                 System.out.println("What is the Id of the item?");
@@ -191,6 +232,7 @@ public class Class {
                     }
                 }
                 cartDao.removeCartItem(usId, itId);
+                cartDaoSql.removeCartItem(usId, itId);
                 break;
             case 7:
                 return false;
@@ -217,7 +259,13 @@ public class Class {
         }
         switch(option) {
             case 1:
+                System.out.println("Collection: ");
                 List<MenuItem> menuList = menuDao.getMenuItemListCustomer();
+                for(MenuItem item : menuList)
+                    System.out.println(item);
+                
+                System.out.println("SQL: ");
+                menuList = menuDaoSql.getMenuItemListCustomer();
                 for(MenuItem item : menuList)
                     System.out.println(item);
                 break;
@@ -232,12 +280,23 @@ public class Class {
                     }
                 }
                 cartDao.addCartItem(myId, itemId);
+                cartDaoSql.addCartItem(myId, itemId);
                 break;
             case 3:
+                System.out.println("Collection: ");
                 List<MenuItem> items = cartDao.getAllCartItems(myId);
+                if(items != null) { 
+                    for(MenuItem item : items) 
+                        System.out.println(item);
+                    System.out.println("Total: " + String.format("%.2f",cartDao.getCart(myId).getTotal()));
+                }
+
+                System.out.println("SQL: ");
+                items = cartDaoSql.getAllCartItems(myId);
                 for(MenuItem item : items) 
                     System.out.println(item);
-                System.out.println("Total: " + String.format("%.2f",cartDao.getCart(myId).getTotal()));
+                System.out.println("Total: " + String.format("%.2f", cartDaoSql.getTotal(myId)));
+
                 break;
             case 4:
                 return false;

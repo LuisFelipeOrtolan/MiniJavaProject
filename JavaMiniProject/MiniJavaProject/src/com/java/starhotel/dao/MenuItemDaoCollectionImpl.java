@@ -77,5 +77,4 @@ public class MenuItemDaoCollectionImpl implements MenuItemDao{
     public void addMenuItem(MenuItem menuItem) {
         menuItemList.add(menuItem);
     }
-    
 }

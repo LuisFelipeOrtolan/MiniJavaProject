@@ -19,6 +19,11 @@ public class CartDaoCollectionImpl implements CartDao{
     public void addCartItem(Long userId, Long menuItemId){
         MenuItemDaoCollectionImpl menu = new MenuItemDaoCollectionImpl();
         MenuItem item = menu.getMenuItem(menuItemId);
+        if(item == null) {
+            System.out.println("Item doesn't exixst.");
+            return;
+        }
+
         
         if(userCarts.containsKey(userId)){
             Cart cart = userCarts.get(userId);
@@ -50,8 +55,9 @@ public class CartDaoCollectionImpl implements CartDao{
                 cart.setTotal(Double.valueOf(total));
             }
             return cart.getMenuItemList();
+        } else{
+            throw new CartEmptyException();
         }
-        return null;
     }
 
     public void removeCartItem(Long userId, Long menuItemId) {
